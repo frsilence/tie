@@ -1,0 +1,295 @@
+var sort_forum = new Vue({
+	el:'#sortforum',
+	data: {
+		sorts:'',
+		forums:'',
+		seach_sort:'',
+		newsort:'',
+		message:{'success':"","error":[]},
+		select_sort:{},
+		new_sort:{'sort_name':'','sort_description':'','sort_image':''},
+		selected_forum:{},
+		new_forum:{'forum_name':'','forum_description':'','forum_image':'','forum_sort':''},
+	},
+	mounted:function(){
+		this.getSort();
+		this.getForum();
+	},
+	computed:{
+		get_mysort:function(search_sort){
+			
+		}
+	},
+	methods:{
+		getSort:function(){
+			$.ajax({
+				type:"get",
+				url:"/api/sort/getallsort",
+				async:true,
+				success:function(data){
+					sort_forum.sorts = data.sorts;
+				},
+				error:function(){
+					alert('no');
+				}
+			});
+		},
+		getForum:function(){
+			$.ajax({
+				type:"get",
+				url:"/api/forum/getallactiveforums",
+				async:true,
+				success:function(data){
+					sort_forum.forums = data.forums;
+				},
+				error:function(){
+					return;
+				},
+			});
+		},
+		deleteSort:function(sort){
+			if(confirm('确认删除分类:'+sort.sort_name+'?\n该操作不可逆！')){
+				$.ajax({
+					type:"post",
+					url:"/api/sort/deletesort/"+sort.id,
+					async:true,
+					headers:{
+					'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+					},
+					data:{
+						_method:'DELETE',
+					},
+					success:function(data){
+						if(data.status==200){
+							alert('分类删除成功！');
+							sort_forum.getSort();
+						}
+					},
+					error:function(data){
+						if(data.status==404){
+							alert('分类不存在');
+						}
+						alert('分类删除失败！');
+						sort_forum.getSort();
+					}
+					
+				});
+			}
+		},
+		deleteForum:function(forum){
+			if(confirm('确认删除分区：'+forum.forum_name+'?\n该操作不可逆！')){
+				$.ajax({
+					type:"post",
+					url:"/api/forum/deleteforum/"+forum.id,
+					async:true,
+					headers:{
+					'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),	
+					},
+					data:{
+						_method:'DELETE',
+					},
+					success:function(data){
+						if(data.status==200){
+							alert('分类删除成功！');
+							sort_forum.getForum();
+						}
+					},
+					error:function(data){
+						if(data.status==404){
+							alert('分区不存在');
+						}
+						alert('分区删除失败！');
+						sort_forum.getForum();
+					}
+				});
+			}
+		},
+		showUpdateSort:function(sort){
+			this.message.success="";
+			this.message.error=[];
+			sort_forum.select_sort=sort;
+			$('.update-sort').show();
+		},
+		showUpdateForum:function(forum){
+			this.message.success="";
+			this.message.error=[];
+			sort_forum.selected_forum=forum;
+			$('.update-forum').show();
+		},
+		closeUpdateForum:function(){
+			this.message.success="";
+			this.message.error=[];
+			$('.update-forum').hide();
+		},
+		showNewSort:function(){
+			this.message.success="";
+			this.message.error=[];
+			$('.new-sort').show();
+		},
+		showNewForum:function(){
+			this.message.success="";
+			this.message.error=[];
+			$('.new-forum').show();
+		},
+		closeNewSort:function(){
+			this.message.success="";
+			this.message.error=[];
+			$('.new-sort').hide();
+		},
+		closeNewForum:function(){
+			this.message.success="";
+			this.message.error=[];
+			$('.new-forum').hide();
+		},
+		createNewSort:function(){
+			var formData = new FormData();
+			formData.append('image',$("#sort_image")[0].files[0]);
+			formData.append('sort_name',sort_forum.new_sort.sort_name);
+			formData.append('sort_description',sort_forum.new_sort.sort_description);
+			sort_forum.message.success="";
+			sort_forum.message.error="";
+			$.ajax({
+				type:"post",
+				url:"/api/sort/addsort",
+				async:true,
+				cache: false,
+                contentType: false, //禁止设置请求类型
+                processData: false, //禁止jquery对DAta数据的处理,默认会处理
+				headers:{
+					'X-CSRF-TOKEN':$('meta[name="csrf-token"]').attr('content'),
+				},
+				data:formData,
+					//name:sort_forum.new_sort.sort_name,
+					//description:sort_forum.new_sort.sort_description,
+					
+				success:function(data){
+					if(data.status==200){
+						sort_forum.message.success = data.message;
+						//setTimeout('sort_forum.message.success=""','1000');
+						sort_forum.closeNewSort();
+						window.location.reload();
+					}
+					else{
+						sort_forum.message.error=data.message;
+					}
+				},
+				error:function(data){
+					sort_forum.message.error=data.message;
+				},
+			});
+		},
+		createNewForum:function(){
+			var formData = new FormData();
+			formData.append('image',$("#forum_image")[0].files[0]);
+			formData.append('forum_name',sort_forum.new_forum.forum_name);
+			formData.append('forum_sort',sort_forum.new_forum.forum_sort);
+			formData.append('forum_description',sort_forum.new_forum.forum_description);
+			sort_forum.message.success="";
+			sort_forum.message.error="";
+			$.ajax({
+				type:"post",
+				url:"/api/forum/addforum",
+				async:true,
+				cache: false,
+                contentType: false, //禁止设置请求类型
+                processData: false, //禁止jquery对DAta数据的处理,默认会处理
+				headers:{
+					'X-CSRF-TOKEN':$('meta[name="csrf-token"]').attr('content'),
+				},
+				data:formData,
+					//name:sort_forum.new_sort.sort_name,
+					//description:sort_forum.new_sort.sort_description,
+					
+				success:function(data){
+					if(data.status==200){
+						sort_forum.message.success = data.message;
+						setTimeout('sort_forum.message.success=""','1000');
+						sort_forum.closeNewForum();
+						window.location.reload();
+					}
+					else{
+						sort_forum.message.error=data.message;
+					}
+				},
+				error:function(data){
+					sort_forum.message.error=data.message;
+				},
+			});
+		},
+		updateSort:function(sort_id){
+			$.ajax({
+				type:"post",
+				url:"/api/sort/updatesort/"+sort_id,
+				async:true,
+				headers:{
+					'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+				},
+				data:{
+					sort_description:sort_forum.select_sort.sort_description,
+					_method:'PUT',
+				},
+				success:function(data){
+					if(data.status==200){
+						sort_forum.message.success=data.message;
+						setTimeout('sort_forum.message.success=""','1000');
+						sort_forum.closePopup();
+						window.location.reload();
+					}
+					else{
+						sort_forum.message.error=data.message;
+					}
+				},
+				error:function(data){
+					sort_forum.message.error=data.message;
+				},
+			});
+		},
+		updateForum:function(forum_id){
+			var formData = new FormData();
+			formData.append('image',$("#forum_newimage")[0].files[0]);
+			formData.append('_method','PUT');
+			formData.append('forum_sort',sort_forum.selected_forum.sort_name);
+			formData.append('forum_description',sort_forum.selected_forum.forum_description);
+			$.ajax({
+				type:"post",
+				url:"/api/forum/updateforum/"+forum_id,
+				async:true,
+				headers:{
+					'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+				},
+				data:formData,
+				cache: false,
+                contentType: false, //禁止设置请求类型
+                processData: false, //禁止jquery对DAta数据的处理,默认会处理
+				success:function(data){
+					if(data.status==200){
+						sort_forum.message.success=data.message;
+						setTimeout('sort_forum.message.success=""','1000');
+						sort_forum.closePopup();
+						window.location.reload();
+					}
+					else{
+						sort_forum.message.error=data.message;
+					}
+				},
+				error:function(data){
+					sort_forum.message.error=data.message;
+				},
+			});
+		},
+		createSort:function(sort){
+			
+		},
+		showPopup:function(){
+			this.message.success="";
+			this.message.error=[];
+			$('.update-sort').show();
+		},
+		closePopup:function(){
+			this.message.success="";
+			this.message.error=[];
+			$('.update-sort').hide();
+		},
+	},
+	
+})
