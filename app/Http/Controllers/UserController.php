@@ -440,7 +440,7 @@ class UserController extends Controller
         }
         else{
             DB::table('roles_permissions')->where('role_id',$role_id)->delete();
-            if($request->has('$permission')){
+            if($request->has('permission')){
                 foreach ($request->input('permission')  as $key => $value) {
                 $permission = Permission::find($value);
                 if($permission){
